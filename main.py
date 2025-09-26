@@ -119,22 +119,35 @@ if __name__ == "__main__":
         min_y, max_y = float(min(y_inner.min(), y_outer.min())), float(max(y_inner.max(), y_outer.max()))
     
     # Set limits and styling with equal aspect ratio (no distortion)
+    # Slight zoom-in towards the center
     range_x = max_x - min_x if max_x != min_x else 1
     range_y = max_y - min_y if max_y != min_y else 1
-    margin = 0.1
-    ax.set_xlim(min_x - margin * range_x, max_x + margin * range_x)
-    ax.set_ylim(min_y - margin * range_y, max_y + margin * range_y)
+    cx, cy = (min_x + max_x) / 2.0, (min_y + max_y) / 2.0
+    zoom_factor = 0.9  # <1 means zoom in a bit
+    half_w = (range_x * zoom_factor) / 2.0
+    half_h = (range_y * zoom_factor) / 2.0
+    # Proposed zoomed-in limits
+    zx0, zx1 = cx - half_w, cx + half_w
+    zy0, zy1 = cy - half_h, cy + half_h
+    # Guarantee all data is visible: expand if needed
+    zx0 = min(zx0, min_x)
+    zx1 = max(zx1, max_x)
+    zy0 = min(zy0, min_y)
+    zy1 = max(zy1, max_y)
+    ax.set_xlim(zx0, zx1)
+    ax.set_ylim(zy0, zy1)
     
     # CRITICAL: Set equal aspect ratio to prevent distortion
     ax.set_aspect('equal')
-    
+
+    # Full-bleed, no visible axes or labels (wallpaper-style)
     ax.set_facecolor('black')
-    ax.grid(True, alpha=0.3, color='white')
-    ax.set_xlabel('X coordinate', color='white', fontsize=12)
-    ax.set_ylabel('Y coordinate', color='white', fontsize=12)
-    ax.tick_params(colors='white')
-    
-    ax.set_title('Black Hole Isoflux (order=0) - Rotated 90°', pad=20, color='white', fontsize=14)
+    ax.axis('off')
+    # Remove figure padding so the plot fills the canvas
+    try:
+        fig.subplots_adjust(left=0, right=1, top=1, bottom=0)
+    except Exception:
+        pass
     
     # Print final statistics
     print(f"\nVisualization complete!")
